@@ -11,7 +11,7 @@ class Category(models.Model):
 
 class Bid(models.Model):    
     bidder = models.ForeignKey(User, on_delete=models.CASCADE)
-    amount = models.DecimalField(decimal_places = 2)
+    amount = models.DecimalField(decimal_places = 2, max_digits=8)
     date = models.DateTimeField(auto_now_add=True)
 
 class Listings(models.Model):
@@ -20,7 +20,7 @@ class Listings(models.Model):
     bids = models.ManyToManyField(Bid)
     title = models.CharField(max_length=64)
     description = models.CharField(max_length=256)
-    reserve_price = models.DecimalField(decimal_places=2)
+    reserve_price = models.DecimalField(decimal_places=2, max_digits=8)
     date_listed = models.DateTimeField()
     img_link = models.URLField()
     status = models.BooleanField()
