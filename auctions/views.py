@@ -6,12 +6,43 @@ from django.urls import reverse
 from django import forms
 
 
-from .models import Users, Categories, Bids, Listings, Watch, Comments
+from .models import User, Categories, Bids, Listings, Watch, Comments
 
+class ListingForm(forms.ModelForm):
+    class Meta:
+        model = Listings
+        fields = ["vendor", "categories", "title", "description", "reserve_price", "img_file", "active"]
 
-def index(request):
-    return render(request, "auctions/index.html")
+def index(request):    
+    return render(request, "auctions/index.html", {
+        "listings": Listings.objects.all()
+    })
 
+def listings(request, listing):
+    listingObj = Listings.objects.get(id=int(listing))
+    return render(request, "auctions/listings.html", {
+        "listing": listingObj
+    })
+
+def create(request):
+    if request.method == "POST":
+        ...
+    else:
+        # This section is for GET request
+        form = ListingForm()
+        return render(request, "auctions/create.html", {
+            "form": form
+        })
+
+def edit(request, listing):
+    ...
+
+def categories(request):
+    categories = Categories.objects.all()
+    categories.sort(key=lambda x: x.category)
+    return render(request, "auctions/categories.html", {
+        "categories": Categories.objects.all()
+    })    
 
 def login_view(request):
     if request.method == "POST":
@@ -53,7 +84,7 @@ def register(request):
 
         # Attempt to create new user
         try:
-            user = Users.objects.create_user(username, email, password)
+            user = User.objects.create_user(username, email, password)
             user.save()
         except IntegrityError:
             return render(request, "auctions/register.html", {

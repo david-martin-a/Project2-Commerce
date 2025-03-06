@@ -2,25 +2,24 @@
 {% load static %}
 
 {% block body %}
-    <h2>Active Listings</h2>
+    <h2>Listing</h2>
     <div class="container-fluid">
-    {% for listing in listings %}
+    
         <div class="row">
-            <div class="col-md-4">
+            <div class="col-12">
                 {% static "" as baseUrl %}
                 <p><img src="{{ baseUrl }}auctions/images/{{listing.img_file}}" style="max-height: 20rem;"></p>
             </div>
-            <div class="col-md-8">
-                <h3><a href="listings/{{ listing.id }}">{{ listing.title }}</a></h3>
+            <div class="col-12">
+                <h3>{{ listing.title }}</h3>
                 <p>Listed by : {{ listing.vendor }}</p>
                 <p>{{ listing.description }}</p>
-                <!-- Show highest bid, if no bids, show reserve price -->
-                <p>Price : ${{ listing.reserve_price }}</p>
+                <p class="lead">${{ listing.reserve_price }}</p>
                 <p>Date listed : {{ listing.date_listed }}</p>
             </div>            
                             
         </div>
-    {% endfor %}
+    
     </div>
     
 {% endblock %}
