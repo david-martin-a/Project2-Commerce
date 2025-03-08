@@ -11,7 +11,7 @@ from .models import User, Categories, Bids, Listings, Watch, Comments
 class ListingForm(forms.ModelForm):
     class Meta:
         model = Listings
-        fields = ["vendor", "categories", "title", "description", "reserve_price", "img_file", "active"]
+        fields = ["categories", "title", "description", "reserve_price", "img_file", "active"]
 
 def index(request):    
     return render(request, "auctions/index.html", {
@@ -26,7 +26,24 @@ def listings(request, listing):
 
 def create(request):
     if request.method == "POST":
-        ...
+        form = ListingForm(request.POST)
+        #form.vendor = request.user
+        if form.is_valid():
+            insert_listing = form.save(commit=False)
+            # commit=False tells Django that "Don't send this to database yet.
+
+            insert_listing.vendor = request.user # Set the user object here
+            insert_listing.save() # Now you can send it to DB
+            #form.save()
+            form.save_m2m()
+            return render(request, "auctions/index.html", {
+                "listings": Listings.objects.all()
+            })           
+        else:
+            ...
+
+
+
     else:
         # This section is for GET request
         form = ListingForm()
@@ -38,8 +55,6 @@ def edit(request, listing):
     ...
 
 def categories(request):
-    categories = Categories.objects.all()
-    categories.sort(key=lambda x: x.category)
     return render(request, "auctions/categories.html", {
         "categories": Categories.objects.all()
     })    
