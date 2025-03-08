@@ -1,9 +1,11 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
+# from django.db.models import Max
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from django import forms
+from . import util
 
 
 from .models import User, Categories, Bids, Listings, Watch, Comments
@@ -14,14 +16,36 @@ class ListingForm(forms.ModelForm):
         fields = ["categories", "title", "description", "reserve_price", "img_file", "active"]
 
 def index(request):    
+    listings = Listings.objects.all()
+    # get the high bid for each object
+    """     for listing in listings:
+            price = util.get_high_bid(listing.id)
+            listing.reserve_price = price """
+
+    for i in range(len(listings)):
+        price = util.get_high_bid(listings[i].id)
+        listings[i].reserve_price = price
+    
     return render(request, "auctions/index.html", {
-        "listings": Listings.objects.all()
+        "listings": listings
     })
 
 def listings(request, listing):
     listingObj = Listings.objects.get(id=int(listing))
+    price = util.get_high_bid(int(listing))
+    catList = listingObj.categories.all()
+    catStr = ""
+    if len(catList) > 0:
+        for cat in catList:
+            catStr = catStr + cat.category  + ", "
+        catStr = catStr[:-2]
+    else:
+        catStr = "No categories listed"
+
     return render(request, "auctions/listings.html", {
-        "listing": listingObj
+        "listing": listingObj,
+        "categories_str": catStr,
+        "bid": price
     })
 
 def create(request):

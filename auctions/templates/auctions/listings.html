@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block body %}
-    <h2>Listing</h2>
+    <h2>Listing : {{ listing.title }}</h2>
     <div class="container-fluid">
     
         <div class="row">
@@ -10,12 +10,23 @@
                 {% static "" as baseUrl %}
                 <p><img src="{{ baseUrl }}auctions/images/{{listing.img_file}}" style="max-height: 20rem;"></p>
             </div>
-            <div class="col-12">
-                <h3>{{ listing.title }}</h3>
-                <p>Listed by : {{ listing.vendor }}</p>
+            <div class="col-12"> 
                 <p>{{ listing.description }}</p>
-                <p class="lead">${{ listing.reserve_price }}</p>
-                <p>Date listed : {{ listing.date_listed }}</p>
+                <p class="lead">${{ bid }}</p>
+                <form id="form1" action="#" method="POST" >
+                <div>
+                    <button type="button" class="btn btn-outline-primary">Place bid</button>
+                </form>
+                <form id="form2" action="#" method="POST">
+                    <button type="button" class="btn btn-outline-primary">Add to watchlist</button>
+                </div>
+                </form>
+                <h2>Details</h2>
+                <ul>
+                    <li>Listed by : {{ listing.vendor }}</li>
+                    <li>Categories : {{ categories_str }} </li>
+                    <li>Created {{ listing.date_listed }}</li>
+                </ul>
             </div>            
                             
         </div>
