@@ -1,0 +1,22 @@
+{% extends "auctions/layout.html" %}
+
+
+{% block body %}
+  <h2>Watchlist {% if user.is_authenticated %} for {{ user.username }}{% endif %}</h2>
+  <div class="container">    
+    <div class="row">
+        <div class="col-md-12">
+            <table class="table table-bordered table-striped table-hover">
+              <thead><th>Item</th><th>Watching since:</th><th></th></thead>
+              <tbody>
+              {% for listing in listings %}
+                <tr><td><a href="{{ listing.item.id }}">{{ listing.item }}</a></td><td>{{ listing.date }}</td><td></td></tr>
+              {% endfor %}
+              </tbody>
+            </table>                
+        </div>       
+    </div>
+</div> 
+
+
+{% endblock %}

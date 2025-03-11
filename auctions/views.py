@@ -15,6 +15,11 @@ class ListingForm(forms.ModelForm):
         model = Listings
         fields = ["categories", "title", "description", "reserve_price", "img_file", "active"]
 
+class WatchlistForm(forms.ModelForm):
+    class Meta:
+        model = Watch
+        fields = ["item"]
+
 def index(request):    
     listings = Listings.objects.all()
     # get the high bid for each object
@@ -31,22 +36,34 @@ def index(request):
     })
 
 def listings(request, listing):
-    listingObj = Listings.objects.get(id=int(listing))
-    price = util.get_high_bid(int(listing))
-    catList = listingObj.categories.all()
-    catStr = ""
-    if len(catList) > 0:
-        for cat in catList:
-            catStr = catStr + cat.category  + ", "
-        catStr = catStr[:-2]
-    else:
-        catStr = "No categories listed"
+    if request.method == "POST":
+        form = ListingForm(request.POST)
+        if form.is_valid():
+            # Determine which submit button was pressed
+            ...
+        else:
+            ...
 
-    return render(request, "auctions/listings.html", {
-        "listing": listingObj,
-        "categories_str": catStr,
-        "bid": price
-    })
+        
+    else:
+        # This is for GET method    
+        listingObj = Listings.objects.get(id=int(listing))
+        price = util.get_high_bid(int(listing))
+        catList = listingObj.categories.all()
+        catStr = ""
+        if len(catList) > 0:
+            for cat in catList:
+                catStr = catStr + cat.category  + ", "
+            # remove final comma in categories list
+            catStr = catStr[:-2]
+        else:
+            catStr = "No categories listed"
+
+        return render(request, "auctions/listings.html", {
+            "listing": listingObj,
+            "categories_str": catStr,
+            "bid": price
+        })
 
 def create(request):
     if request.method == "POST":
@@ -65,15 +82,19 @@ def create(request):
             })           
         else:
             ...
-
-
-
     else:
         # This section is for GET request
         form = ListingForm()
         return render(request, "auctions/create.html", {
             "form": form
         })
+    
+def watchlist(request):
+    user = request.user
+    listings = Watch.objects.filter(watcher=user.id)
+    return render(request, "auctions/watchlist.html", {
+        "listings": listings
+    })
 
 def edit(request, listing):
     ...

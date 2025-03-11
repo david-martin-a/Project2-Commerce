@@ -13,12 +13,16 @@
             <div class="col-12"> 
                 <p>{{ listing.description }}</p>
                 <p class="lead">${{ bid }}</p>
-                <form id="form1" action="#" method="POST" >
-                    <div></div>
-                <div>
-                    <button type="button" class="btn btn-outline-primary">Place bid</button></form><form id="form2" action="#" method="POST"><button type="button" class="btn btn-outline-primary">Add to watchlist</button>
-                </div>
-                </form>
+                <form id="form1" action="#" method="POST" >                    
+                    <div>
+                        {% csrf_token %}
+                        <input type="text" name="amount"id="amount" class="form-control" placeholder="Bid" style="width:30rem">
+                        <button type="submit" name="bid" value="1" class="btn btn-outline-primary">Place bid</button>
+                        <!-- Button should toggle between Add/Remove from waitlist -->
+                        <button type="submit" name="watch" value="1" class="btn btn-outline-primary">Add to watchlist</button>
+                        <button type="submit" name="close" value="1" class="btn btn-outline-primary">Close auction</button>
+                    </div>
+                </form>                
                 <h2>Details</h2>
                 <ul>
                     <li>Listed by : {{ listing.vendor }}</li>
