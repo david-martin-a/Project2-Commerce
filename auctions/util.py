@@ -1,5 +1,5 @@
 from django.db.models import Max
-from .models import Bids, Listings
+from .models import Bids, Listings, Watch
 
 def get_high_bid(item_id):
   listingObj = Listings.objects.get(id=int(item_id))
@@ -11,3 +11,7 @@ def get_high_bid(item_id):
       price = listingObj.reserve_price
 
   return price
+
+def get_num_watching(user_id):
+  num = Watch.objects.filter(watcher=int(user_id)).count()
+  return num

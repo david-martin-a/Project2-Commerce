@@ -15,21 +15,22 @@ class ListingForm(forms.ModelForm):
         model = Listings
         fields = ["categories", "title", "description", "reserve_price", "img_file", "active"]
 
-class WatchlistForm(forms.ModelForm):
+class BidsForm(forms.ModelForm):
     class Meta:
-        model = Watch
-        fields = ["item"]
+        model = Bids
+        fields = ["amount"]
 
 def index(request):    
     listings = Listings.objects.all()
     # get the high bid for each object
-    """     for listing in listings:
-            price = util.get_high_bid(listing.id)
-            listing.reserve_price = price """
-
     for i in range(len(listings)):
         price = util.get_high_bid(listings[i].id)
         listings[i].reserve_price = price
+
+    # get the number of items being watched by this user for tag in menu
+    #num_watching = ""
+    #if request.user.id != None:
+    #    num_watching = util.get_num_watching(request.user.id)
     
     return render(request, "auctions/index.html", {
         "listings": listings
@@ -37,18 +38,46 @@ def index(request):
 
 def listings(request, listing):
     if request.method == "POST":
-        form = ListingForm(request.POST)
-        if form.is_valid():
-            # Determine which submit button was pressed
-            ...
-        else:
-            ...
+        form = BidsForm(request.POST)
+        keys = form.data.keys()
+        # Determine which submit button was pressed
+        if "place_bid" in keys:
+            # the "Bid" button was clicked - check if bid amount was present and is a valid amount           
+            if form.is_valid():
+                amt = float(form.cleaned_data["amount"])                
+                high_bid = float(request.POST["high_bid"])
+                if amt > high_bid:
+                    new_bid = Bids(item_id=int(listing), bidder_id=request.user.id, amount=amt)
+                    new_bid.save()
+                    listings = Listings.objects.all()
+                    return HttpResponseRedirect(reverse(index))                        
+                else:
+                    # the new bid was smaller than high bid
+                    ...
+            else:
+                ...
+        elif "watch" in keys:
+            new_watch = Watch(item_id=int(listing), watcher_id=request.user.id)            
+            try:
+                new_watch.save()
+            except IntegrityError:
+                ...
+            else:
+                # if listing saved to user's watchlist successfully, go to their watchlist
+                listings = Watch.objects.filter(watcher=request.user)
+                return render(request, "auctions/watchlist.html", {
+                    "listings": listings
+                })
 
+        elif "close" in keys:
+            # the "Close" button was clicked - change the item's active status
+            ...
         
     else:
-        # This is for GET method    
+        # This is for GET method ----------------------------    
         listingObj = Listings.objects.get(id=int(listing))
         price = util.get_high_bid(int(listing))
+        
         catList = listingObj.categories.all()
         catStr = ""
         if len(catList) > 0:
@@ -59,10 +88,12 @@ def listings(request, listing):
         else:
             catStr = "No categories listed"
 
+        #check if this item is on the users watchlist? (or do this on the layout template? )
+
         return render(request, "auctions/listings.html", {
             "listing": listingObj,
             "categories_str": catStr,
-            "bid": price
+            "bid": price            
         })
 
 def create(request):
@@ -114,6 +145,10 @@ def login_view(request):
 
         # Check if authentication successful
         if user is not None:
+            # add number of items on their watchlist to user?
+            num_watching = util.get_num_watching(user.id)
+            user.num_watching = num_watching
+
             login(request, user)
             return HttpResponseRedirect(reverse("index"))
         else:

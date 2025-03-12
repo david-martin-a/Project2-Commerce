@@ -34,10 +34,16 @@ class Bids(models.Model):
     amount = models.DecimalField(decimal_places = 2, max_digits=8)
     date = models.DateTimeField(auto_now_add=True)  
 
+    def __str__(self):
+        return f"{self.bidder} bid ${self.amount} for {self.item} on {self.date}"
+
 class Watch(models.Model):
     watcher = models.ForeignKey(User, on_delete=models.CASCADE, related_name="watchlist")
     item = models.ForeignKey(Listings, on_delete=models.CASCADE)    
     date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.watcher} is watching {self.item}"
 
 class Comments(models.Model):
     comment_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_comments")
