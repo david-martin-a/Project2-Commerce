@@ -14,4 +14,7 @@ def get_high_bid(item_id):
 
 def get_num_watching(user_id):
   num = Watch.objects.filter(watcher=int(user_id)).count()
-  return num
+  if num > 0:
+    return str(num)
+  else:
+    return ""

@@ -146,8 +146,8 @@ def login_view(request):
         # Check if authentication successful
         if user is not None:
             # add number of items on their watchlist to user?
-            num_watching = util.get_num_watching(user.id)
-            user.num_watching = num_watching
+            num = util.get_num_watching(user.id)
+            user.number_on_watchlist = num
 
             login(request, user)
             return HttpResponseRedirect(reverse("index"))
