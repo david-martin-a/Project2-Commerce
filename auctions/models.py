@@ -3,7 +3,7 @@ from django.db import models
 
 
 class User(AbstractUser):
-    number_on_watchlist = models.CharField(max_length=8, default="")
+    number_on_watchlist = models.CharField(blank=True, max_length=8)
 
 class Categories(models.Model):
     category = models.CharField(max_length=64)
