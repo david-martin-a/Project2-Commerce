@@ -3,8 +3,7 @@ from django.db import models
 
 
 class User(AbstractUser):
-    rating = models.CharField(max_length=32, blank=True, default="")
-    postal_code = models.CharField(max_length=8, blank=True, default="")
+    number_on_watchlist = models.IntegerField(default=0)
 
 class Categories(models.Model):
     category = models.CharField(max_length=64)
