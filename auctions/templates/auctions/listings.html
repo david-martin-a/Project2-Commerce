@@ -7,6 +7,9 @@
     
         <div class="row">
             <div class="col-12">
+                {% if watched %}
+                <div class="m-2"><span class="badge bg-primary" style="color:#ffffff;">Watchlist</span></div>
+                {% endif %}
                 {% static "" as baseUrl %}
                 <p><img src="{{ baseUrl }}auctions/images/{{listing.img_file}}" style="max-height: 20rem;"></p>
             </div>
@@ -16,11 +19,16 @@
                 <form id="form1" action="#" method="POST" >                    
                     <div>
                         {% csrf_token %}
-                        <input type="text" name="amount"id="amount" class="form-control" placeholder="Bid" style="width:30rem">
+                        <input type="text" name="amount"id="amount" class="form-control mb-4" placeholder="Bid" style="width:30rem">
                         <input type="hidden" name="high_bid" value="{{ bid }}">
                         <button type="submit" name="place_bid" value="1" class="btn btn-outline-primary">Place bid</button>
                         <!-- Button should toggle between Add/Remove from waitlist -->
-                        <button type="submit" name="watch" value="1" class="btn btn-outline-primary">Add to watchlist</button>
+                        {% if watched %}
+                            <button type="submit" name="watch" value="2" class="btn btn-outline-primary">Remove from watchlist</button>
+                        {% else %}
+                            <button type="submit" name="watch" value="1" class="btn btn-outline-primary">Add to watchlist</button>
+                        {% endif %}
+                        
                         <button type="submit" name="close" value="1" class="btn btn-outline-primary">Close auction</button>
                     </div>
                 </form>                

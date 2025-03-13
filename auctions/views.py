@@ -52,22 +52,34 @@ def listings(request, listing):
                     listings = Listings.objects.all()
                     return HttpResponseRedirect(reverse(index))                        
                 else:
-                    # the new bid was smaller than high bid
+                    # the new bid was smaller than high bid - go back to same page with error message, vs errror page
                     ...
             else:
                 ...
         elif "watch" in keys:
-            new_watch = Watch(item_id=int(listing), watcher_id=request.user.id)            
-            try:
-                new_watch.save()
-            except IntegrityError:
-                ...
-            else:
-                # if listing saved to user's watchlist successfully, go to their watchlist
-                listings = Watch.objects.filter(watcher=request.user)
-                return render(request, "auctions/watchlist.html", {
-                    "listings": listings
-                })
+            if form.data["watch"] == 1:
+                new_watch = Watch(item_id=int(listing), watcher_id=request.user.id)            
+                try:
+                    new_watch.save()
+                except IntegrityError:
+                    ...
+                else:
+                    # if listing saved to user's watchlist successfully, go to their watchlist
+                    listings = Watch.objects.filter(watcher=request.user)
+                    return render(request, "auctions/watchlist.html", {
+                        "listings": listings
+                    })
+            elif form.data["watch"] == 2:
+                x = new_watch.objects.filter(int(listing.id))
+                if x.count() == 1:
+                    try:
+                        x.delete()
+                    except IntegrityError:
+                        ...
+                    else:
+                        return render(request, "auctions/listings/" + request.id, {
+                            "listings": listings
+                        })
 
         elif "close" in keys:
             # the "Close" button was clicked - change the item's active status
@@ -77,7 +89,7 @@ def listings(request, listing):
         # This is for GET method ----------------------------    
         listingObj = Listings.objects.get(id=int(listing))
         price = util.get_high_bid(int(listing))
-        
+        watched = util.is_watched(request.user.id, listing)
         catList = listingObj.categories.all()
         catStr = ""
         if len(catList) > 0:
@@ -93,7 +105,8 @@ def listings(request, listing):
         return render(request, "auctions/listings.html", {
             "listing": listingObj,
             "categories_str": catStr,
-            "bid": price            
+            "bid": price,
+            "watched": watched    
         })
 
 def create(request):
@@ -130,6 +143,11 @@ def watchlist(request):
 def edit(request, listing):
     ...
 
+def message(request, message):
+    return render(request, "auctions/message.html", {
+        "message": message
+    })
+
 def categories(request):
     return render(request, "auctions/categories.html", {
         "categories": Categories.objects.all()
@@ -148,7 +166,7 @@ def login_view(request):
             # add number of items on their watchlist to user?
             num = util.get_num_watching(user.id)
             user.number_on_watchlist = num
-
+            user.save()
             login(request, user)
             return HttpResponseRedirect(reverse("index"))
         else:

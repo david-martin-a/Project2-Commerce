@@ -18,3 +18,10 @@ def get_num_watching(user_id):
     return str(num)
   else:
     return ""
+  
+def is_watched(user_id, item_id):   
+   i = Watch.objects.filter(watcher=int(user_id), item=int(item_id)).count()
+   if i > 0:
+      return True
+   else:
+      return False
