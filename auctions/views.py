@@ -1,6 +1,6 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
-# from django.db.models import Max
+from django.db.models import Max
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
@@ -20,17 +20,38 @@ class BidsForm(forms.ModelForm):
         model = Bids
         fields = ["amount"]
 
+class ListingDetails:
+  
+  def __init__(self, user_id, item_id):
+    listingObj = Listings.objects.get(id=int(item_id))
+    bids = Bids.objects.filter(item=int(item_id))
+    self.num_bids = bids.count()
+    if self.num_bids > 0:              
+      max_bid = bids.aggregate(Max("amount", default=0))        
+      self.high_bid = f"{max_bid['amount__max']:.2f}"
+      max_bid_obj = Bids.objects.filter(amount=max_bid['amount__max'])
+      if max_bid_obj[0].bidder.id == user_id:
+        self.high_bidder = True
+        if listingObj.active == False:
+          self.winner = True
+        else:
+          self.winner = False
+      else:
+        self.high_bidder = False
+    else:
+        self.high_bid = listingObj.reserve_price
+    i = Watch.objects.filter(watcher=int(user_id), item=int(item_id)).count()
+    if i > 0:
+      self.watched = True
+    else:
+      self.watched = False        
+
 def index(request):    
     listings = Listings.objects.all()
     # get the high bid for each object
     for i in range(len(listings)):
         price = util.get_high_bid(listings[i].id)
         listings[i].reserve_price = price
-
-    # get the number of items being watched by this user for tag in menu
-    #num_watching = ""
-    #if request.user.id != None:
-    #    num_watching = util.get_num_watching(request.user.id)
     
     return render(request, "auctions/index.html", {
         "listings": listings
@@ -39,8 +60,8 @@ def index(request):
 def listings(request, listing):
     if request.method == "POST":
         form = BidsForm(request.POST)
-        keys = form.data.keys()
         # Determine which submit button was pressed
+        keys = form.data.keys()        
         if "place_bid" in keys:
             # the "Bid" button was clicked - check if bid amount was present and is a valid amount           
             if form.is_valid():
@@ -103,10 +124,8 @@ def listings(request, listing):
         
     else:
         # This is for GET method ----------------------------    
+        deets = ListingDetails(request.user.id, listing)
         listingObj = Listings.objects.get(id=int(listing))
-        price = util.get_high_bid(listing)
-        watched = util.is_watched(request.user.id, listing)
-        bid_details = util.get_bids_details(request.user.id, listing)
         catList = listingObj.categories.all()
         catStr = ""
         if len(catList) > 0:
@@ -117,14 +136,10 @@ def listings(request, listing):
         else:
             catStr = "No categories listed"
 
-        #compose message of how many bids and if current bid is from user
-
         return render(request, "auctions/listings.html", {
             "listing": listingObj,
             "categories_str": catStr,
-            "bid": price,
-            "watched": watched,
-            "bid_details": bid_details    
+            "details": deets    
         })
 
 def create(request):
