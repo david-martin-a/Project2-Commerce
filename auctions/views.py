@@ -57,39 +57,56 @@ def listings(request, listing):
             else:
                 ...
         elif "watch" in keys:
-            if form.data["watch"] == 1:
+            if form.data["watch"] == "1":
                 new_watch = Watch(item_id=int(listing), watcher_id=request.user.id)            
                 try:
                     new_watch.save()
                 except IntegrityError:
-                    ...
-                else:
-                    # if listing saved to user's watchlist successfully, go to their watchlist
-                    listings = Watch.objects.filter(watcher=request.user)
-                    return render(request, "auctions/watchlist.html", {
-                        "listings": listings
+                    return render(request, "auctions/message.html", {
+                        "message": "Error"
                     })
-            elif form.data["watch"] == 2:
-                x = new_watch.objects.filter(int(listing.id))
+                else:
+                    util.update_user_number_watching(request)
+
+                    #num = util.get_num_watching(request.user.id)
+                    #request.user.number_on_watchlist = num
+                    #request.user.save()
+                    # if listing saved to user's watchlist successfully, refresh the page
+                    return HttpResponseRedirect("/listings/" + listing)
+            elif form.data["watch"] == "2":
+                x = Watch.objects.filter(watcher_id=request.user.id, item_id=int(listing))
                 if x.count() == 1:
                     try:
                         x.delete()
                     except IntegrityError:
-                        ...
-                    else:
-                        return render(request, "auctions/listings/" + request.id, {
-                            "listings": listings
+                        return render(request, "auctions/message.html", {
+                            "message": "Error"
                         })
+                    else:
+                        util.update_user_number_watching(request)
+                        #num = util.get_num_watching(request.user.id)
+                        #request.user.number_on_watchlist = num
+                        #request.user.save()                                                
+                        # if listing was successfully removed from watchlist, refresh the page
+                        return HttpResponseRedirect("/listings/" + listing)
 
         elif "close" in keys:
             # the "Close" button was clicked - change the item's active status
-            ...
+            return render(request, "auctions/message.html", {
+                "message": "To be coded"
+            })
+        
+        else:
+            return render(request, "auctions/message.html", {
+                "message": "Error"
+            })
         
     else:
         # This is for GET method ----------------------------    
         listingObj = Listings.objects.get(id=int(listing))
-        price = util.get_high_bid(int(listing))
+        price = util.get_high_bid(listing)
         watched = util.is_watched(request.user.id, listing)
+        bid_details = util.get_bids_details(request.user.id, listing)
         catList = listingObj.categories.all()
         catStr = ""
         if len(catList) > 0:
@@ -100,13 +117,14 @@ def listings(request, listing):
         else:
             catStr = "No categories listed"
 
-        #check if this item is on the users watchlist? (or do this on the layout template? )
+        #compose message of how many bids and if current bid is from user
 
         return render(request, "auctions/listings.html", {
             "listing": listingObj,
             "categories_str": catStr,
             "bid": price,
-            "watched": watched    
+            "watched": watched,
+            "bid_details": bid_details    
         })
 
 def create(request):
