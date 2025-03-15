@@ -67,14 +67,27 @@ def listings(request, listing):
             if form.is_valid():
                 amt = float(form.cleaned_data["amount"])                
                 high_bid = float(request.POST["high_bid"])
-                if amt > high_bid:
-                    new_bid = Bids(item_id=int(listing), bidder_id=request.user.id, amount=amt)
-                    new_bid.save()
-                    listings = Listings.objects.all()
-                    return HttpResponseRedirect(reverse(index))                        
+                if int(request.POST["num_bids"]) > 0:
+                    #this is NOT the first bit; it must be GREATER than the previous bid
+                    if amt > high_bid:
+                        new_bid = Bids(item_id=int(listing), bidder_id=request.user.id, amount=amt)
+                        new_bid.save()
+                        listings = Listings.objects.all()
+                        return HttpResponseRedirect(reverse(index))                        
+                    else:
+                        # the new bid was smaller than high bid - go back to same page with error message, vs errror page
+                        ...
                 else:
-                    # the new bid was smaller than high bid - go back to same page with error message, vs errror page
-                    ...
+                    # num_bids is zero or not present; this bid can be GREATER OR EQUAL to reserve price
+                    if amt >= high_bid:
+                        new_bid = Bids(item_id=int(listing), bidder_id=request.user.id, amount=amt)
+                        new_bid.save()
+                        listings = Listings.objects.all()
+                        return HttpResponseRedirect(reverse(index))                        
+                    else:
+                        # the new bid was smaller than high bid - go back to same page with error message, vs errror page
+                        ...
+
             else:
                 ...
         elif "watch" in keys:
