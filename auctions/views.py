@@ -20,8 +20,7 @@ class BidsForm(forms.ModelForm):
         model = Bids
         fields = ["amount"]
 
-class ListingDetails:
-  
+class ListingDetails:  
   def __init__(self, user_id, item_id):
     listingObj = Listings.objects.get(id=int(item_id))
     bids = Bids.objects.filter(item=int(item_id))
@@ -73,7 +72,9 @@ def listings(request, listing):
                         new_bid = Bids(item_id=int(listing), bidder_id=request.user.id, amount=amt)
                         new_bid.save()
                         listings = Listings.objects.all()
-                        return HttpResponseRedirect(reverse(index))                        
+                        # return HttpResponseRedirect(reverse(index))
+                        request.msg = "Your bid was recorded."
+                        return HttpResponseRedirect(request.path_info)                        
                     else:
                         # the new bid was smaller than high bid - go back to same page with error message, vs errror page
                         ...
@@ -83,7 +84,7 @@ def listings(request, listing):
                         new_bid = Bids(item_id=int(listing), bidder_id=request.user.id, amount=amt)
                         new_bid.save()
                         listings = Listings.objects.all()
-                        return HttpResponseRedirect(reverse(index))                        
+                        return HttpResponseRedirect(request.path_info)                        
                     else:
                         # the new bid was smaller than high bid - go back to same page with error message, vs errror page
                         ...
@@ -197,6 +198,14 @@ def message(request, message):
 def categories(request):
     return render(request, "auctions/categories.html", {
         "categories": Categories.objects.all()
+    }) 
+
+def category_list(request, category):
+    categoryObj = Categories.objects.get(category=category)
+    listings = categoryObj.listed.all()
+    return render(request, "auctions/index.html", {
+        "listings": listings,
+        "category": category
     })    
 
 def login_view(request):

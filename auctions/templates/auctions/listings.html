@@ -17,6 +17,7 @@
                 <p>{{ listing.description }}</p>
                 <p class="lead">${{ details.high_bid }}</p>                
                 {% if listing.active %}
+                {% if request.msg %}<p>{{ request.msg }}</p>{% endif %}
                 <p>{{ details.num_bids }} bid(s) so far. {% if details.high_bidder %}Your bid is the current bid.{% endif %}</p>
                 <form id="form1" action="#" method="POST" >                    
                     <div>
