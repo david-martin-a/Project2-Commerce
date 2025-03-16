@@ -16,7 +16,7 @@ class Categories(models.Model):
 
 class Listings(models.Model):
     vendor = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_listings")
-    categories = models.ManyToManyField(Categories)    
+    categories = models.ManyToManyField(Categories, related_name="listed")    
     title = models.CharField(max_length=64)
     description = models.CharField(max_length=256, blank=True, default="")
     reserve_price = models.DecimalField(decimal_places=2, max_digits=8, default=0)
