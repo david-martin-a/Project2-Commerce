@@ -1,3 +1,21 @@
 body {
-    padding: 10px;
+    margin: 3rem;    
+    font-size: 1.2em;
+}
+blockquote {    
+    margin-left: 9px;
+    border-left: 2px solid #007bff;
+    padding-left: 5px;
+    padding-top: 7px;
+    padding-bottom: 7px;
+    background: linear-gradient(90deg, #0555ab1f, #caf9d252 85%, transparent);
+    width: 80%;
+}
+.btn {
+    font-weight: 700;
+}
+.comments p {
+    font-size: smaller;
+    font-style: italic;
+    margin-bottom: 0;
 }

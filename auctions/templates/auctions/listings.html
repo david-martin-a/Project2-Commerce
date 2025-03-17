@@ -17,23 +17,27 @@
                 <p>{{ listing.description }}</p>
                 <p class="lead">${{ details.high_bid }}</p>                
                 {% if listing.active %}
-                {% if request.msg %}<p>{{ request.msg }}</p>{% endif %}
+                
                 <p>{{ details.num_bids }} bid(s) so far. {% if details.high_bidder %}Your bid is the current bid.{% endif %}</p>
-                <form id="form1" action="#" method="POST" >                    
+                <form id="form1" action="#" method="POST">                    
                     <div>
-                        {% csrf_token %}                        
-                        <input type="text" name="amount"id="amount" class="form-control mb-4" placeholder="Bid" style="width:30rem">
+                        {% csrf_token %}
+                        {% if details.msg %}<p class="text-danger">{{ details.msg }}</p>{% endif %}                        
+                        <div class="input-group">
+                        <input type="text" name="amount"id="amount" class="form-control mb-4" placeholder="Enter amount of your bid" style="max-width:30rem">
+                        <button type="submit" name="place_bid" value="1" class="btn btn-primary form-control" style="max-width: 9rem;">Place bid</button>
+                        </div>
                         <input type="hidden" name="high_bid" value="{{ details.high_bid }}">
                         <input type="hidden" name="num_bids" value="{{ details.num_bids }}">                        
-                        <button type="submit" name="place_bid" value="1" class="btn btn-outline-primary">Place bid</button>
+                        
                         <!-- Button should toggle between Add/Remove from waitlist -->
                         {% if details.watched %}
-                            <button type="submit" name="watch" value="2" class="btn btn-outline-primary">Remove from watchlist</button>
+                            <button type="submit" name="watch" value="2" class="btn btn-primary">Remove from watchlist</button>
                         {% else %}
-                            <button type="submit" name="watch" value="1" class="btn btn-outline-primary">Add to watchlist</button>
+                            <button type="submit" name="watch" value="1" class="btn btn-primary">Add to watchlist</button>
                         {% endif %}
                         {% if listing.vendor.id == request.user.id %}
-                            <button type="submit" name="close" value="1" class="btn btn-outline-primary">Close auction</button>
+                            <button type="submit" name="close" value="1" class="btn btn-primary">Close auction</button>
                         {% endif %}
                     </div>
                 </form>
@@ -41,12 +45,34 @@
                     <p>This auction is <span class="badge bg-primary" style="color:#ffffff;">closed</span>.</p>
                     {% if details.winner %}<p>You are the <span class="badge bg-primary" style="color:#ffffff;">winner</span> of the auction!</p>  {% endif %}
                 {% endif %}
-                <h2>Details</h2>
+                <h3 class="mt-3">Details</h3>
                 <ul>
                     <li>Listed by : {{ listing.vendor }}</li>
-                    <li>Categories : {{ categories_str }} </li>
+                    <li>Categories : {{ details.categories }} </li>
                     <li>Created {{ listing.date_listed }}</li>
                 </ul>
+                <hr>
+                <h3 class="mt-3">Comments</h3>
+                <div class="comments">
+                {% for comment in details.comments %}
+                    <div>
+                        <p>
+                            Comment by {{ comment.comment_by }} on {{ comment.date }}:
+                        </p>
+                        <blockquote>
+                            {{ comment.comment }}
+                        </blockquote>
+                    </div>
+                {% endfor %}
+                </div>
+                <h4>Add a comment:</h4>
+                <form id="form2" action="#" method="POST">
+                    <div class="input-group">
+                    {% csrf_token %}
+                    <input type="text" name="comment" placeholder="Add your comment" class="form-control" style="max-width: 66%;">
+                    <button type="submit" name="add-comment" value="1" class="btn btn-primary form-control" style="max-width: 9rem;">Submit</button>
+                    </div>
+                </form>
             </div>            
                             
         </div>

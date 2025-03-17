@@ -2,7 +2,13 @@
 {% load static %}
 
 {% block body %}
-    <h2 class="mb-5">Active Listings{% if category %} in category <span class="text-primary" style="font-weight: 700;">{{ category }}</span>{% endif %}</h2>
+    <h2 class="mb-5">
+    {% if closed %}
+    Auctions Won
+    {% else %}
+    Active Listings
+    {% endif %}
+    {% if category %} in category <span class="text-primary" style="font-weight: 700;">{{ category }}</span>{% endif %}</h2>
     <div class="container-fluid">
     {% for listing in listings %}
         <div class="row">
@@ -11,23 +17,16 @@
                 <p class="text-center"><img src="{{ baseUrl }}auctions/images/{{listing.img_file}}" style="max-height: 20rem;"></p>
             </div>
             <div class="col-md-8">
-                {% if category %}
-                    <h3><a href="../listings/{{ listing.id }}">{{ listing.title }}</a></h3>
-                {% else %}
-                    <h3><a href="listings/{{ listing.id }}">{{ listing.title }}</a></h3>
-                {% endif %}
-
-                
-                
+                <h3><a href="/listings/{{ listing.id }}">{{ listing.title }}</a></h3>
                 <p>Listed by : {{ listing.vendor }}</p>
-                <p>{{ listing.description }}</p>
-                <!-- Show highest bid, if no bids, show reserve price -->
+                <p>{{ listing.description }}</p>                
                 <p>Price : ${{ listing.reserve_price }}</p>
                 <p>Created {{ listing.date_listed }}</p>
-            </div>            
-                            
+            </div>          
         </div>
     {% endfor %}
-    </div>
-    
+    {% if not listings  %}
+        <div>No Listings in category</div>
+    {% endif  %}
+    </div>    
 {% endblock %}

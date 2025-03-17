@@ -23,6 +23,7 @@ class BidsForm(forms.ModelForm):
 class ListingDetails:  
   def __init__(self, user_id, item_id):
     listingObj = Listings.objects.get(id=int(item_id))
+    self.listingObj = listingObj
     bids = Bids.objects.filter(item=int(item_id))
     self.num_bids = bids.count()
     if self.num_bids > 0:              
@@ -43,10 +44,23 @@ class ListingDetails:
     if i > 0:
       self.watched = True
     else:
-      self.watched = False        
+      self.watched = False
+    catList = listingObj.categories.all()
+    catStr = ""
+    if len(catList) > 0:
+        for cat in catList:
+            catStr = catStr + cat.category  + ", "
+        # remove final comma in categories list
+        catStr = catStr[:-2]
+    else:
+        catStr = "No categories listed"
+    self.categories = catStr
+    comments = Comments.objects.filter(comment_on=item_id)
+    self.comments = comments
+
 
 def index(request):    
-    listings = Listings.objects.all()
+    listings = Listings.objects.filter(active=True)
     # get the high bid for each object
     for i in range(len(listings)):
         price = util.get_high_bid(listings[i].id)
@@ -59,7 +73,7 @@ def index(request):
 def listings(request, listing):
     if request.method == "POST":
         form = BidsForm(request.POST)
-        # Determine which submit button was pressed
+        # Determine which submit button was pressed in order to determine the course of action
         keys = form.data.keys()        
         if "place_bid" in keys:
             # the "Bid" button was clicked - check if bid amount was present and is a valid amount           
@@ -71,13 +85,23 @@ def listings(request, listing):
                     if amt > high_bid:
                         new_bid = Bids(item_id=int(listing), bidder_id=request.user.id, amount=amt)
                         new_bid.save()
-                        listings = Listings.objects.all()
-                        # return HttpResponseRedirect(reverse(index))
-                        request.msg = "Your bid was recorded."
-                        return HttpResponseRedirect(request.path_info)                        
+                        #listings = Listings.objects.all()
+                        listingObj = Listings.objects.get(id=int(listing))
+                        deets = ListingDetails(request.user.id, listing)
+                        deets.msg = "Your bid was recorded."
+                        return render(request, "auctions/listings.html", {
+                            "listing": listingObj,
+                            "details": deets    
+                        })
                     else:
                         # the new bid was smaller than high bid - go back to same page with error message, vs errror page
-                        ...
+                        listingObj = Listings.objects.get(id=int(listing))
+                        deets = ListingDetails(request.user.id, listing)
+                        deets.msg = "Error: Bid must be greater than the previous bid."
+                        return render(request, "auctions/listings.html", {
+                            "listing": listingObj,
+                            "details": deets    
+                        })
                 else:
                     # num_bids is zero or not present; this bid can be GREATER OR EQUAL to reserve price
                     if amt >= high_bid:
@@ -87,11 +111,24 @@ def listings(request, listing):
                         return HttpResponseRedirect(request.path_info)                        
                     else:
                         # the new bid was smaller than high bid - go back to same page with error message, vs errror page
-                        ...
-
+                        listingObj = Listings.objects.get(id=int(listing))
+                        deets = ListingDetails(request.user.id, listing)
+                        deets.msg = "Error: Bid must be greater than the previous bid."
+                        return render(request, "auctions/listings.html", {
+                            "listing": listingObj,
+                            "details": deets    
+                        })
             else:
-                ...
+                # The form was not valid - user may have entered value other than decimal
+                listingObj = Listings.objects.get(id=int(listing))
+                deets = ListingDetails(request.user.id, listing)
+                deets.msg = "Error: Bid must be a valid two-digit number."
+                return render(request, "auctions/listings.html", {
+                    "listing": listingObj,
+                    "details": deets    
+                })
         elif "watch" in keys:
+            # The "add to" or "remove from" watchlist button was pressed
             if form.data["watch"] == "1":
                 new_watch = Watch(item_id=int(listing), watcher_id=request.user.id)            
                 try:
@@ -102,10 +139,6 @@ def listings(request, listing):
                     })
                 else:
                     util.update_user_number_watching(request)
-
-                    #num = util.get_num_watching(request.user.id)
-                    #request.user.number_on_watchlist = num
-                    #request.user.save()
                     # if listing saved to user's watchlist successfully, refresh the page
                     return HttpResponseRedirect("/listings/" + listing)
             elif form.data["watch"] == "2":
@@ -118,41 +151,36 @@ def listings(request, listing):
                             "message": "Error"
                         })
                     else:
-                        util.update_user_number_watching(request)
-                        #num = util.get_num_watching(request.user.id)
-                        #request.user.number_on_watchlist = num
-                        #request.user.save()                                                
+                        util.update_user_number_watching(request)                        
                         # if listing was successfully removed from watchlist, refresh the page
                         return HttpResponseRedirect("/listings/" + listing)
 
         elif "close" in keys:
-            # the "Close" button was clicked - change the item's active status
+            # the "Close auction" button was clicked - change the item's active status to inactive
             return render(request, "auctions/message.html", {
                 "message": "To be coded"
             })
-        
+        elif "add-comment" in keys:            
+            new_comment = Comments(comment_by_id=request.user.id, comment_on_id=int(listing), comment=request.POST["comment"])
+            try:
+                new_comment.save()
+            except IntegrityError:
+                return render(request, "auctions/message.html", {
+                    "message": "Error"
+                })
+            else:
+                return HttpResponseRedirect("/listings/" + listing)        
         else:
             return render(request, "auctions/message.html", {
                 "message": "Error"
             })
         
     else:
-        # This is for GET method ----------------------------    
-        deets = ListingDetails(request.user.id, listing)
+        # This is for GET method ----------------------------   
         listingObj = Listings.objects.get(id=int(listing))
-        catList = listingObj.categories.all()
-        catStr = ""
-        if len(catList) > 0:
-            for cat in catList:
-                catStr = catStr + cat.category  + ", "
-            # remove final comma in categories list
-            catStr = catStr[:-2]
-        else:
-            catStr = "No categories listed"
-
+        deets = ListingDetails(request.user.id, listing)
         return render(request, "auctions/listings.html", {
             "listing": listingObj,
-            "categories_str": catStr,
             "details": deets    
         })
 
@@ -181,8 +209,8 @@ def create(request):
         })
     
 def watchlist(request):
-    user = request.user
-    listings = Watch.objects.filter(watcher=user.id)
+    #user = request.user
+    listings = Watch.objects.filter(watcher=request.user.id)
     return render(request, "auctions/watchlist.html", {
         "listings": listings
     })
@@ -202,11 +230,30 @@ def categories(request):
 
 def category_list(request, category):
     categoryObj = Categories.objects.get(category=category)
-    listings = categoryObj.listed.all()
+    listings = categoryObj.listed.filter(active=True)
     return render(request, "auctions/index.html", {
         "listings": listings,
         "category": category
-    })    
+    }) 
+
+def won(request):
+    closed_auctions = Listings.objects.filter(active=False)
+    # for each closed auction get the winning bid
+    wins = []
+    for auction in closed_auctions:
+        bids = Bids.objects.filter(item=auction.id).order_by('amount').values()
+        if bids.count() > 0:
+            if bids[0]["bidder_id"] == request.user.id:
+                wins.append(auction)
+
+    return render(request, "auctions/index.html", {
+        "listings": wins,
+        "closed": True
+    })
+
+
+    # for each winning bid, check if it was made by user
+
 
 def login_view(request):
     if request.method == "POST":
