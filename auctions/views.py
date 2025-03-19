@@ -1,13 +1,11 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.db.models import Max
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from django import forms
 from . import util
-
-
 from .models import User, Categories, Bids, Listings, Watch, Comments
 
 class ListingForm(forms.ModelForm):
@@ -22,6 +20,7 @@ class BidsForm(forms.ModelForm):
 
 class ListingDetails:  
   def __init__(self, user_id, item_id):
+    # initialize the class object with all the details of the listing as viewed by a particular user
     listingObj = Listings.objects.get(id=int(item_id))
     self.listingObj = listingObj
     bids = Bids.objects.filter(item=int(item_id))
@@ -60,7 +59,7 @@ class ListingDetails:
 
 
 def index(request):    
-    listings = Listings.objects.filter(active=True)
+    listings = Listings.objects.filter(active=True).order_by("-date_listed")
     # get the high bid for each object
     for i in range(len(listings)):
         price = util.get_high_bid(listings[i].id)
@@ -81,55 +80,46 @@ def listings(request, listing):
                 amt = float(form.cleaned_data["amount"])                
                 high_bid = float(request.POST["high_bid"])
                 if int(request.POST["num_bids"]) > 0:
-                    #this is NOT the first bit; it must be GREATER than the previous bid
+                    #this is NOT the first bid; it must be GREATER than the previous bid
                     if amt > high_bid:
                         new_bid = Bids(item_id=int(listing), bidder_id=request.user.id, amount=amt)
-                        new_bid.save()
-                        #listings = Listings.objects.all()
-                        listingObj = Listings.objects.get(id=int(listing))
+                        new_bid.save() 
                         deets = ListingDetails(request.user.id, listing)
                         deets.msg = "Your bid was recorded."
-                        return render(request, "auctions/listings.html", {
-                            "listing": listingObj,
+                        return render(request, "auctions/listings.html", {                            
                             "details": deets    
                         })
                     else:
-                        # the new bid was smaller than high bid - go back to same page with error message, vs errror page
-                        listingObj = Listings.objects.get(id=int(listing))
+                        # the new bid was smaller than high bid - go back to same page with error message                        
                         deets = ListingDetails(request.user.id, listing)
                         deets.msg = "Error: Bid must be greater than the previous bid."
-                        return render(request, "auctions/listings.html", {
-                            "listing": listingObj,
+                        return render(request, "auctions/listings.html", {                            
                             "details": deets    
                         })
                 else:
-                    # num_bids is zero or not present; this bid can be GREATER OR EQUAL to reserve price
+                    # This is the FIRST bid: (the num_bids is zero or not present) this bid can be greater OR EQUAL to reserve price
                     if amt >= high_bid:
                         new_bid = Bids(item_id=int(listing), bidder_id=request.user.id, amount=amt)
                         new_bid.save()
-                        listings = Listings.objects.all()
                         return HttpResponseRedirect(request.path_info)                        
                     else:
-                        # the new bid was smaller than high bid - go back to same page with error message, vs errror page
-                        listingObj = Listings.objects.get(id=int(listing))
+                        # the new bid was smaller than high bid - go back to same page with error message, vs errror page                        
                         deets = ListingDetails(request.user.id, listing)
-                        deets.msg = "Error: Bid must be greater than the previous bid."
-                        return render(request, "auctions/listings.html", {
-                            "listing": listingObj,
+                        deets.msg = "Error: Bid must be greater than or equal to the reserve price."
+                        return render(request, "auctions/listings.html", {                            
                             "details": deets    
                         })
             else:
-                # The form was not valid - user may have entered value other than decimal
-                listingObj = Listings.objects.get(id=int(listing))
+                # The form was not valid - user may have entered value other than decimal                
                 deets = ListingDetails(request.user.id, listing)
                 deets.msg = "Error: Bid must be a valid two-digit number."
-                return render(request, "auctions/listings.html", {
-                    "listing": listingObj,
+                return render(request, "auctions/listings.html", {                    
                     "details": deets    
                 })
         elif "watch" in keys:
             # The "add to" or "remove from" watchlist button was pressed
             if form.data["watch"] == "1":
+                # It was the "add to" button that was pressed
                 new_watch = Watch(item_id=int(listing), watcher_id=request.user.id)            
                 try:
                     new_watch.save()
@@ -139,9 +129,10 @@ def listings(request, listing):
                     })
                 else:
                     util.update_user_number_watching(request)
-                    # if listing saved to user's watchlist successfully, refresh the page
+                    # if listing was successfully saved to user's watchlist, refresh the page
                     return HttpResponseRedirect("/listings/" + listing)
             elif form.data["watch"] == "2":
+                # It was the "remove from" button that was pressed
                 x = Watch.objects.filter(watcher_id=request.user.id, item_id=int(listing))
                 if x.count() == 1:
                     try:
@@ -156,67 +147,66 @@ def listings(request, listing):
                         return HttpResponseRedirect("/listings/" + listing)
 
         elif "close" in keys:
-            # the "Close auction" button was clicked - change the item's active status to inactive
-            return render(request, "auctions/message.html", {
-                "message": "To be coded"
-            })
+            # the "Close auction" button was clicked - change the item's active status to inactive            
+            Listings.objects.filter(pk=int(listing)).update(active=False)            
+            return HttpResponseRedirect(request.path_info)
+        
         elif "add-comment" in keys:            
             new_comment = Comments(comment_by_id=request.user.id, comment_on_id=int(listing), comment=request.POST["comment"])
             try:
                 new_comment.save()
             except IntegrityError:
                 return render(request, "auctions/message.html", {
-                    "message": "Error"
+                    "message": "Error in saving comment"
                 })
             else:
                 return HttpResponseRedirect("/listings/" + listing)        
         else:
+            # should never be triggered unless user changes form ids or values
             return render(request, "auctions/message.html", {
                 "message": "Error"
-            })
-        
+            })        
     else:
-        # This is for GET method ----------------------------   
-        listingObj = Listings.objects.get(id=int(listing))
+        # This is for GET method ----------------------------  
+        # User must be signed in 
+        if request.user.id == None:
+            return render(request, "auctions/message.html", {
+                "message": "Please log in to view auction item details."
+            }) 
         deets = ListingDetails(request.user.id, listing)
-        return render(request, "auctions/listings.html", {
-            "listing": listingObj,
+        return render(request, "auctions/listings.html", {            
             "details": deets    
         })
 
 def create(request):
     if request.method == "POST":
-        form = ListingForm(request.POST)
-        #form.vendor = request.user
+        form = ListingForm(request.POST)        
         if form.is_valid():
             insert_listing = form.save(commit=False)
             # commit=False tells Django that "Don't send this to database yet.
-
             insert_listing.vendor = request.user # Set the user object here
             insert_listing.save() # Now you can send it to DB
-            #form.save()
+            # save many-to-many items as a second step
             form.save_m2m()
             return render(request, "auctions/index.html", {
                 "listings": Listings.objects.all()
             })           
         else:
-            ...
+            return render(request, "auctions/message.html", {
+                "message": "Form data was not valid. Please try again"
+            })
     else:
-        # This section is for GET request
+        # This section is for GET request for a blank "Create listing" form
         form = ListingForm()
         return render(request, "auctions/create.html", {
             "form": form
         })
     
-def watchlist(request):
-    #user = request.user
+def watchlist(request):    
     listings = Watch.objects.filter(watcher=request.user.id)
     return render(request, "auctions/watchlist.html", {
         "listings": listings
     })
-
-def edit(request, listing):
-    ...
 
 def message(request, message):
     return render(request, "auctions/message.html", {
@@ -241,23 +231,18 @@ def won(request):
     # for each closed auction get the winning bid
     wins = []
     for auction in closed_auctions:
-        bids = Bids.objects.filter(item=auction.id).order_by('amount').values()
+        # get the highest bid for each closed auction
+        bids = Bids.objects.filter(item=auction.id).order_by('amount').values()        
         if bids.count() > 0:
             if bids[0]["bidder_id"] == request.user.id:
                 wins.append(auction)
-
     return render(request, "auctions/index.html", {
         "listings": wins,
         "closed": True
     })
 
-
-    # for each winning bid, check if it was made by user
-
-
 def login_view(request):
     if request.method == "POST":
-
         # Attempt to sign user in
         username = request.POST["username"]
         password = request.POST["password"]
@@ -265,7 +250,7 @@ def login_view(request):
 
         # Check if authentication successful
         if user is not None:
-            # add number of items on their watchlist to user?
+            # add number of items on the user's watchlist to user object instance
             num = util.get_num_watching(user.id)
             user.number_on_watchlist = num
             user.save()

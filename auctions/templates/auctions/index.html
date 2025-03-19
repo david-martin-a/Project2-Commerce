@@ -1,5 +1,4 @@
 {% extends "auctions/layout.html" %}
-{% load static %}
 
 {% block body %}
     <h2 class="mb-5">
@@ -12,21 +11,20 @@
     <div class="container-fluid">
     {% for listing in listings %}
         <div class="row">
-            <div class="col-md-4">
-                {% static "" as baseUrl %}
-                <p class="text-center"><img src="{{ baseUrl }}auctions/images/{{listing.img_file}}" style="max-height: 20rem;"></p>
+            <div class="col-md-4">                
+                <p class="text-center"><img src="/static/auctions/images/{{listing.img_file}}" style="max-height:20rem;max-width:100%"></p>
             </div>
-            <div class="col-md-8">
+            <div class="col-md-8 mb-5">
                 <h3><a href="/listings/{{ listing.id }}">{{ listing.title }}</a></h3>
-                <p>Listed by : {{ listing.vendor }}</p>
-                <p>{{ listing.description }}</p>                
+                <p style="font-style: italic;">{{ listing.description }}</p>  
+                <p>Listed by : {{ listing.vendor }}</p>                              
                 <p>Price : ${{ listing.reserve_price }}</p>
                 <p>Created {{ listing.date_listed }}</p>
             </div>          
         </div>
     {% endfor %}
-    {% if not listings  %}
-        <div>No Listings in category</div>
+    {% if not listings %}
+        <div>No Listings in this category</div>
     {% endif  %}
     </div>    
 {% endblock %}

@@ -19,3 +19,13 @@ blockquote {
     font-style: italic;
     margin-bottom: 0;
 }
+.labels-col {
+    text-align: right;
+}
+.create input[type="text"], .create input[type="number"], .create select {
+    width: 60%;
+}
+.create input[type="checkbox"] {
+    width: 1.5rem;
+    height: 1.5rem;
+}

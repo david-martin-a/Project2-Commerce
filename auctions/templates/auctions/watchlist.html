@@ -1,6 +1,5 @@
 {% extends "auctions/layout.html" %}
 
-
 {% block body %}
   <h2>Watchlist {% if user.is_authenticated %} for {{ user.username }}{% endif %}</h2>
   <div class="container">    
@@ -17,6 +16,4 @@
         </div>       
     </div>
 </div> 
-
-
 {% endblock %}

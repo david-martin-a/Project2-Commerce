@@ -1,22 +1,21 @@
 {% extends "auctions/layout.html" %}
-{% load static %}
 
 {% block body %}
-    <h2>Listing : {{ listing.title }}</h2>
+    <!-- <h2>Listing : {{ listing.title }}</h2> -->
+    <h2>Listing : {{ details.listingObj.title }}</h2>
     <div class="container-fluid">
     
         <div class="row">
             <div class="col-12">
                 {% if details.watched %}
                 <div class="m-2"><span class="badge bg-primary" style="color:#ffffff;">Watchlist</span></div>
-                {% endif %}
-                {% static "" as baseUrl %}
-                <p><img src="{{ baseUrl }}auctions/images/{{listing.img_file}}" style="max-height: 20rem;"></p>
+                {% endif %}                
+                <p><img src="/static/auctions/images/{{details.listingObj.img_file}}" style="max-height: 20rem;"></p>
             </div>
             <div class="col-12"> 
-                <p>{{ listing.description }}</p>
+                <p style="font-style: italic;">{{ details.listingObj.description }}</p>
                 <p class="lead">${{ details.high_bid }}</p>                
-                {% if listing.active %}
+                {% if details.listingObj.active %}
                 
                 <p>{{ details.num_bids }} bid(s) so far. {% if details.high_bidder %}Your bid is the current bid.{% endif %}</p>
                 <form id="form1" action="#" method="POST">                    
@@ -28,15 +27,13 @@
                         <button type="submit" name="place_bid" value="1" class="btn btn-primary form-control" style="max-width: 9rem;">Place bid</button>
                         </div>
                         <input type="hidden" name="high_bid" value="{{ details.high_bid }}">
-                        <input type="hidden" name="num_bids" value="{{ details.num_bids }}">                        
-                        
-                        <!-- Button should toggle between Add/Remove from waitlist -->
+                        <input type="hidden" name="num_bids" value="{{ details.num_bids }}"> 
                         {% if details.watched %}
                             <button type="submit" name="watch" value="2" class="btn btn-primary">Remove from watchlist</button>
                         {% else %}
                             <button type="submit" name="watch" value="1" class="btn btn-primary">Add to watchlist</button>
                         {% endif %}
-                        {% if listing.vendor.id == request.user.id %}
+                        {% if details.listingObj.vendor.id == request.user.id %}
                             <button type="submit" name="close" value="1" class="btn btn-primary">Close auction</button>
                         {% endif %}
                     </div>
@@ -47,9 +44,9 @@
                 {% endif %}
                 <h3 class="mt-3">Details</h3>
                 <ul>
-                    <li>Listed by : {{ listing.vendor }}</li>
+                    <li>Listed by : {{ details.listingObj.vendor }}</li>
                     <li>Categories : {{ details.categories }} </li>
-                    <li>Created {{ listing.date_listed }}</li>
+                    <li>Created {{ details.listingObj.date_listed }}</li>
                 </ul>
                 <hr>
                 <h3 class="mt-3">Comments</h3>
@@ -73,10 +70,8 @@
                     <button type="submit" name="add-comment" value="1" class="btn btn-primary form-control" style="max-width: 9rem;">Submit</button>
                     </div>
                 </form>
-            </div>            
-                            
+            </div>          
         </div>
-    
     </div>
     
 {% endblock %}
