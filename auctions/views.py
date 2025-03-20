@@ -7,6 +7,7 @@ from django.urls import reverse
 from django import forms
 from . import util
 from .models import User, Categories, Bids, Listings, Watch, Comments
+from django.contrib.auth.decorators import login_required
 
 class ListingForm(forms.ModelForm):
     class Meta:
@@ -18,7 +19,8 @@ class BidsForm(forms.ModelForm):
         model = Bids
         fields = ["amount"]
 
-class ListingDetails:  
+class ListingDetails:
+
   def __init__(self, user_id, item_id):
     # initialize the class object with all the details of the listing as viewed by a particular user
     listingObj = Listings.objects.get(id=int(item_id))
@@ -68,6 +70,7 @@ def index(request):
         "listings": listings
     })
 
+@login_required(login_url='/login')
 def listings(request, listing):
     if request.method == "POST":
         form = BidsForm(request.POST)
@@ -177,6 +180,7 @@ def listings(request, listing):
             "details": deets    
         })
 
+@login_required(login_url='/login')
 def create(request):
     if request.method == "POST":
         form = ListingForm(request.POST)        
@@ -201,6 +205,7 @@ def create(request):
             "form": form
         })
     
+@login_required(login_url='/login')
 def watchlist(request):    
     listings = Watch.objects.filter(watcher=request.user.id)
     return render(request, "auctions/watchlist.html", {
@@ -225,6 +230,7 @@ def category_list(request, category):
         "category": category
     }) 
 
+@login_required(login_url='/login')
 def won(request):
     closed_auctions = Listings.objects.filter(active=False)
     # for each closed auction get the winning bid
