@@ -4,7 +4,12 @@
 			"path": "auctions/views.py",
 			"bookmarks": [
 				{
-					"line": 102,
+					"line": 101,
+					"column": 0,
+					"label": ""
+				},
+				{
+					"line": 227,
 					"column": 0,
 					"label": ""
 				}

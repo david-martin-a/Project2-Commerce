@@ -12,7 +12,7 @@
     {% for listing in listings %}
         <div class="row">
             <div class="col-md-4">                
-                <p class="text-center"><img src="/static/auctions/images/{{listing.img_file}}" style="max-height:20rem;max-width:100%"></p>
+                <p class="text-center"><img src="/static/auctions/images/{{listing.img_file}}" style="max-height:20rem;max-width:100%;"></p>
             </div>
             <div class="col-md-8 mb-5">
                 <h3><a href="/listings/{{ listing.id }}">{{ listing.title }}</a></h3>
@@ -21,7 +21,7 @@
                 <p>Price : ${{ listing.reserve_price }}</p>
                 <p>Created {{ listing.date_listed }}</p>
             </div>          
-        </div>
+        </div><hr>
     {% endfor %}
     {% if not listings %}
         <div>No Listings in this category</div>

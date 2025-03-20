@@ -1,6 +1,6 @@
 body {
     margin: 3rem;    
-    font-size: 1.2em;
+    font-size: 1.3rem;
 }
 blockquote {    
     margin-left: 9px;
@@ -10,6 +10,9 @@ blockquote {
     padding-bottom: 7px;
     background: linear-gradient(90deg, #0555ab1f, #caf9d252 85%, transparent);
     width: 80%;
+}
+hr {
+    border-top-color: #0057b578;
 }
 .btn {
     font-weight: 700;

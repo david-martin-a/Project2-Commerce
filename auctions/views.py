@@ -23,13 +23,11 @@ class ListingDetails:
     # initialize the class object with all the details of the listing as viewed by a particular user
     listingObj = Listings.objects.get(id=int(item_id))
     self.listingObj = listingObj
-    bids = Bids.objects.filter(item=int(item_id))
+    bids = Bids.objects.filter(item=int(item_id)).order_by("-amount")
     self.num_bids = bids.count()
-    if self.num_bids > 0:              
-      max_bid = bids.aggregate(Max("amount", default=0))        
-      self.high_bid = f"{max_bid['amount__max']:.2f}"
-      max_bid_obj = Bids.objects.filter(amount=max_bid['amount__max'])
-      if max_bid_obj[0].bidder.id == user_id:
+    if self.num_bids > 0:  
+      self.high_bid = f"{bids[0].amount:.2f}"
+      if bids[0].bidder_id == user_id:
         self.high_bidder = True
         if listingObj.active == False:
           self.winner = True
@@ -37,6 +35,7 @@ class ListingDetails:
           self.winner = False
       else:
         self.high_bidder = False
+        self.winner = False
     else:
         self.high_bid = listingObj.reserve_price
     i = Watch.objects.filter(watcher=int(user_id), item=int(item_id)).count()
@@ -232,7 +231,7 @@ def won(request):
     wins = []
     for auction in closed_auctions:
         # get the highest bid for each closed auction
-        bids = Bids.objects.filter(item=auction.id).order_by('amount').values()        
+        bids = Bids.objects.filter(item=auction.id).order_by('-amount').values()        
         if bids.count() > 0:
             if bids[0]["bidder_id"] == request.user.id:
                 wins.append(auction)
